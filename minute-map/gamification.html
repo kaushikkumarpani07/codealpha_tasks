@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gamification - MinuteMap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #7F56D9, #F97066);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            transition: background 0.5s;
+            animation: gradientShift 20s infinite alternate;
+        }
+
+        @keyframes gradientShift {
+            0% { background: linear-gradient(135deg, #7F56D9, #F97066); }
+            50% { background: linear-gradient(135deg, #F97066, #34D399); }
+            100% { background: linear-gradient(135deg, #34D399, #7F56D9); }
+        }
+
+        .dark-mode {
+            background: linear-gradient(135deg, #1E3A8A, #3B82F6);
+            color: #fff;
+            animation: gradientShiftDark 20s infinite alternate;
+        }
+
+        @keyframes gradientShiftDark {
+            0% { background: linear-gradient(135deg, #1E3A8A, #3B82F6); }
+            50% { background: linear-gradient(135deg, #3B82F6, #93C5FD); }
+            100% { background: linear-gradient(135deg, #93C5FD, #1E3A8A); }
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 900;
+        }
+
+        .dark-mode header {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7));
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            margin-right: 10px;
+            transition: transform 0.3s;
+        }
+
+        .dark-mode .logo img {
+            filter: invert(1);
+        }
+
+        .logo img:hover {
+            transform: rotate(360deg);
+        }
+
+        .logo span {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #7F56D9;
+        }
+
+        .dark-mode .logo span {
+            color: #3B82F6;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1rem;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .dark-mode nav a {
+            color: #fff;
+        }
+
+        nav a:hover {
+            color: #7F56D9;
+            transform: translateY(-2px);
+            display: inline-block;
+        }
+
+        .dark-mode nav a:hover {
+            color: #3B82F6;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.2);
+        }
+
+        .main-content {
+            padding: 6rem 2rem 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: box-shadow 0.3s;
+        }
+
+        .container:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(127, 86, 217, 0.3);
+        }
+
+        .dark-mode .container {
+            background: rgba(30, 58, 138, 0.85);
+            border: 1px solid rgba(30, 58, 138, 0.2);
+        }
+
+        .dark-mode .container:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+            color: #7F56D9;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode h1 {
+            color: #3B82F6;
+        }
+
+        .caption {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+
+        .dark-mode .caption {
+            color: #bbb;
+        }
+
+        .gamification-section {
+            margin-bottom: 2rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
+        }
+
+        .dark-mode .gamification-section {
+            background: rgba(30, 58, 138, 0.5);
+        }
+
+        .gamification-section h2 {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            color: #7F56D9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dark-mode .gamification-section h2 {
+            color: #3B82F6;
+        }
+
+        .gamification-section h2 .trophy-icon {
+            font-size: 1.8rem;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+
+        .progress-bar {
+            width: 100%;
+            background: #eee;
+            border-radius: 10px;
+            height: 25px;
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 0.5rem;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode .progress-bar {
+            background: #2D4B9A;
+        }
+
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, #7F56D9, #F97066);
+            width: 0;
+            transition: width 1s ease-in-out;
+            position: relative;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .dark-mode .progress {
+            background: linear-gradient(90deg, #3B82F6, #93C5FD);
+        }
+
+        .progress::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        .level-info {
+            font-size: 1.1rem;
+            color: #555;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .dark-mode .level-info {
+            color: #bbb;
+        }
+
+        .streak-counter {
+            text-align: center;
+            margin-top: 1rem;
+            font-size: 1.2rem;
+            color: #F97066;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .dark-mode .streak-counter {
+            color: #93C5FD;
+        }
+
+        .streak-counter .fire {
+            font-size: 1.5rem;
+            animation: pulseFire 1s infinite;
+        }
+
+        @keyframes pulseFire {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+
+        .achievements {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .achievement {
+            flex: 1;
+            min-width: 150px;
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.7);
+            border-radius: 10px;
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .dark-mode .achievement {
+            background: rgba(30, 58, 138, 0.7);
+        }
+
+        .achievement.locked {
+            opacity: 0.5;
+        }
+
+        .achievement:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .achievement .icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .achievement:hover .icon {
+            transform: rotate(10deg);
+        }
+
+        .achievement p {
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .dark-mode .achievement p {
+            color: #bbb;
+        }
+
+        .achievement .badge-popup {
+            position: absolute;
+            top: -60px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #FBBF24;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            display: none;
+            z-index: 10;
+            animation: pop 0.5s ease-in-out;
+        }
+.achievement.unlocked .badge-popup {
+            display: block;
+        }
+
+        @keyframes pop {
+            0% { transform: translateX(-50%) scale(0); }
+            50% { transform: translateX(-50%) scale(1.2); }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+
+        .daily-challenge {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .dark-mode .daily-challenge {
+            background: rgba(30, 58, 138, 0.5);
+        }
+
+        .daily-challenge::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.2), transparent);
+            opacity: 0.5;
+        }
+
+        .daily-challenge h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.5rem;
+            color: #7F56D9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dark-mode .daily-challenge h3 {
+            color: #3B82F6;
+        }
+
+        .daily-challenge h3 .challenge-icon {
+            font-size: 1.5rem;
+            animation: spin 2s infinite linear;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .daily-challenge p {
+            font-size: 1rem;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        .dark-mode .daily-challenge p {
+            color: #bbb;
+        }
+
+        .daily-challenge button {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            background: #34D399;
+            color: white;
+            transition: background 0.3s, transform 0.2s;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .daily-challenge button:hover {
+            background: #2CA87F;
+            transform: scale(1.05);
+        }
+
+        .leaderboard {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1.5rem;
+            border-radius: 15px;
+        }
+
+        .dark-mode .leaderboard {
+            background: rgba(30, 58, 138, 0.5);
+        }
+
+        .leaderboard h3 {
+            font-size: 1.3rem;
+            margin-bottom: 1rem;
+            color: #7F56D9;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .dark-mode .leaderboard h3 {
+            color: #3B82F6;
+        }
+
+        .leaderboard h3 .leaderboard-icon {
+            font-size: 1.5rem;
+        }
+
+        .leaderboard ul {
+            list-style: none;
+        }
+
+        .leaderboard li {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.8rem;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 1rem;
+            color: #555;
+            transition: background 0.3s;
+        }
+
+        .dark-mode .leaderboard li {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+        }
+
+        .leaderboard li:hover {
+            background: rgba(127, 86, 217, 0.1);
+        }
+
+        .dark-mode .leaderboard li:hover {
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .leaderboard li:last-child {
+            border-bottom: none;
+        }
+
+        .leaderboard li .position {
+            font-weight: bold;
+            color: #FBBF24;
+        }
+
+        .dark-mode .leaderboard li .position {
+            color: #93C5FD;
+        }
+
+        footer {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode footer {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7));
+        }
+
+        .quote {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .dark-mode .quote {
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            .achievements {
+                flex-direction: column;
+            }
+            .achievement {
+                min-width: 100%;
+            }
+            .leaderboard li {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="window.location.href='index.html'">
+            <img src="Logo.png" alt="MinuteMap Logo">
+            <span>MinuteMap</span>
+        </div>
+        <div class="header-right">
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+            </nav>
+            <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="container">
+            <h1>Gamification</h1>
+            <p class="caption">Earn points, level up, and stay motivated!</p>
+
+            <div class="gamification-section">
+                <h2><span class="trophy-icon">🏆</span> Your Progress</h2>
+                <div class="progress-bar">
+                    <div class="progress" id="levelProgress"></div>
+                </div>
+                <p class="level-info" id="levelInfo">Level 1 - 0/100 XP</p>
+                <div class="streak-counter">
+                    Streak: <span id="streakCount">3 days</span> <span class="fire">🔥</span>
+                </div>
+
+                <div class="achievements" id="achievements">
+                    <!-- Achievements will be populated by JS -->
+                </div>
+            </div>
+
+            <div class="daily-challenge">
+                <h3><span class="challenge-icon">⚡</span> Daily Challenge</h3>
+                <p id="dailyChallengeText">Loading challenge...</p>
+                <button onclick="completeDailyChallenge()">Complete Challenge (+50 XP)</button>
+            </div>
+
+          
+        </div>
+    </div>
+    <footer>
+        <p class="quote">Seize the day, one task at a time.</p>
+        <p>© 2025 MinuteMap. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let userXP = parseInt(localStorage.getItem('userXP')) || 0;
+        let userLevel = Math.floor(userXP / 100) + 1;
+        let xpToNextLevel = userLevel * 100;
+        let streak = parseInt(localStorage.getItem('streakCount')) || 3;
+        let achievements = JSON.parse(localStorage.getItem('achievements')) || [
+            { name: "First Task", icon: "🏆", condition: 1, unlocked: false },
+            { name: "Streak Master", icon: "🔥", condition: 3, unlocked: false },
+            { name: "Task Pro", icon: "⭐", condition: 10, unlocked: false },
+            { name: "Early Bird", icon: "🌅", condition: 5, unlocked: false }
+        ];
+        let leaderboard = JSON.parse(localStorage.getItem('leaderboard')) || [
+            { name: "Alex", points: 500 },
+            { name: "Sam", points: 450 },
+            { name: "Jamie", points: 400 },
+            { name: localStorage.getItem('userName') || "You", points: userXP }
+        ];
+
+        function updateProgress() {
+            const progress = (userXP % 100) / 100 * 100;
+            document.getElementById('levelProgress').style.width = `${progress}%`;
+            document.getElementById('levelInfo').textContent = `Level ${userLevel} - ${userXP}/${xpToNextLevel} XP`;
+            document.getElementById('streakCount').textContent = `${streak} days`;
+        }
+
+        function checkAchievements() {
+            const completedTasks = JSON.parse(localStorage.getItem('tasks'))?.filter(task => task.completed).length || 0;
+            const earlyTasks = JSON.parse(localStorage.getItem('tasks'))?.filter(task => {
+                if (!task.dueDate || !task.dueTime || !task.completed) return false;
+                const dueDateTime = new Date(`${task.dueDate}T${task.dueTime}`);
+                const completedTime = new Date(task.completedTime || new Date());
+                return completedTime < dueDateTime;
+            }).length || 0;
+
+            achievements.forEach(achievement => {
+                if (achievement.name === "First Task" && completedTasks >= achievement.condition) {
+                    achievement.unlocked = true;
+                }
+                if (achievement.name === "Streak Master" && streak >= achievement.condition) {
+                    achievement.unlocked = true;
+                }
+                if (achievement.name === "Task Pro" && completedTasks >= achievement.condition) {
+                    achievement.unlocked = true;
+                }
+                if (achievement.name === "Early Bird" && earlyTasks >= achievement.condition) {
+                    achievement.unlocked = true;
+                }
+            });
+
+            localStorage.setItem('achievements', JSON.stringify(achievements));
+            renderAchievements();
+        }
+function renderAchievements() {
+            const achievementsContainer = document.getElementById('achievements');
+            achievementsContainer.innerHTML = '';
+            achievements.forEach(achievement => {
+                const div = document.createElement('div');
+                div.className = `achievement ${achievement.unlocked ? 'unlocked' : 'locked'}`;
+                div.innerHTML = `
+                    <div class="icon">${achievement.unlocked ? achievement.icon : '🔒'}</div>
+                    <p>${achievement.name}</p>
+                    ${achievement.unlocked ? '<div class="badge-popup">Unlocked!</div>' : ''}
+                `;
+                achievementsContainer.appendChild(div);
+            });
+        }
+
+        function generateDailyChallenge() {
+            const challenges = [
+                "Complete a task in the Urgent category! (+50 XP)",
+                "Finish 3 tasks today! (+50 XP)",
+                "Mark a task as completed before its due time! (+50 XP)",
+                "Add a new custom category and assign a task to it! (+50 XP)",
+                "Complete a task in Focus Mode! (+50 XP)"
+            ];
+            const challenge = challenges[Math.floor(Math.random() * challenges.length)];
+            document.getElementById('dailyChallengeText').textContent = challenge;
+        }
+
+        function completeDailyChallenge() {
+            userXP += 50;
+            userLevel = Math.floor(userXP / 100) + 1;
+            xpToNextLevel = userLevel * 100;
+            streak += 1;
+            localStorage.setItem('userXP', userXP);
+            localStorage.setItem('streakCount', streak);
+            updateProgress();
+            updateLeaderboard();
+            checkAchievements();
+            alert(`Challenge completed! +50 XP\nYou're now at Level ${userLevel} with a ${streak}-day streak! 🔥`);
+            generateDailyChallenge();
+        }
+
+        function updateLeaderboard() {
+            leaderboard = leaderboard.filter(entry => entry.name !== (localStorage.getItem('userName') || "You"));
+            leaderboard.push({ name: localStorage.getItem('userName') || "You", points: userXP });
+            leaderboard.sort((a, b) => b.points - a.points);
+            leaderboard = leaderboard.slice(0, 5); // Top 5 only
+            localStorage.setItem('leaderboard', JSON.stringify(leaderboard));
+            renderLeaderboard();
+        }
+
+        function renderLeaderboard() {
+            const leaderboardContainer = document.getElementById('leaderboard');
+            leaderboardContainer.innerHTML = '';
+            leaderboard.forEach((entry, index) => {
+                const li = document.createElement('li');
+                li.innerHTML = `<span class="position">${index + 1}.</span> <span>${entry.name}</span> <span>${entry.points} XP</span>`;
+                leaderboardContainer.appendChild(li);
+            });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const toggle = document.querySelector('.theme-toggle');
+            toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️';
+        }
+
+        updateProgress();
+        checkAchievements();
+        generateDailyChallenge();
+        renderLeaderboard();
+    </script>
+</body>
+</html>

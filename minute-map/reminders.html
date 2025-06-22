@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Reminders - MinuteMap</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #7F56D9, #F97066);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            color: #333;
+            transition: background 0.5s;
+            animation: gradientShift 20s infinite alternate;
+        }
+
+        @keyframes gradientShift {
+            0% { background: linear-gradient(135deg, #7F56D9, #F97066); }
+            50% { background: linear-gradient(135deg, #F97066, #34D399); }
+            100% { background: linear-gradient(135deg, #34D399, #7F56D9); }
+        }
+
+        .dark-mode {
+            background: linear-gradient(135deg, #1E3A8A, #3B82F6);
+            color: #fff;
+            animation: gradientShiftDark 20s infinite alternate;
+        }
+
+        @keyframes gradientShiftDark {
+            0% { background: linear-gradient(135deg, #1E3A8A, #3B82F6); }
+            50% { background: linear-gradient(135deg, #3B82F6, #93C5FD); }
+            100% { background: linear-gradient(135deg, #93C5FD, #1E3A8A); }
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            z-index: 900;
+        }
+
+        .dark-mode header {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7));
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .logo img {
+            width: 60px;
+            height: 60px;
+            margin-right: 10px;
+            transition: transform 0.3s;
+        }
+
+        .dark-mode .logo img {
+            filter: invert(1);
+        }
+
+        .logo img:hover {
+            transform: rotate(360deg);
+        }
+
+        .logo span {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #7F56D9;
+        }
+
+        .dark-mode .logo span {
+            color: #3B82F6;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+        }
+
+        nav a {
+            color: #333;
+            text-decoration: none;
+            margin: 0 1rem;
+            font-size: 1rem;
+            transition: color 0.3s, transform 0.3s;
+        }
+
+        .dark-mode nav a {
+            color: #fff;
+        }
+
+        nav a:hover {
+            color: #7F56D9;
+            transform: translateY(-2px);
+            display: inline-block;
+        }
+
+        .dark-mode nav a:hover {
+            color: #3B82F6;
+        }
+
+        .theme-toggle {
+            cursor: pointer;
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            transition: transform 0.3s;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.2);
+        }
+.main-content {
+            padding: 6rem 2rem 2rem;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+            -ms-overflow-style: none;
+            scroll-behavior: smooth;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.85);
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: box-shadow 0.3s;
+        }
+
+        .container:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(127, 86, 217, 0.3);
+        }
+
+        .dark-mode .container {
+            background: rgba(30, 58, 138, 0.85);
+            border: 1px solid rgba(30, 58, 138, 0.2);
+        }
+
+        .dark-mode .container:hover {
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 20px rgba(59, 130, 246, 0.3);
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            color: #7F56D9;
+        }
+
+        .dark-mode h1 {
+            color: #3B82F6;
+        }
+
+        .caption {
+            text-align: center;
+            font-style: italic;
+            color: #555;
+            margin-bottom: 1.5rem;
+        }
+
+        .dark-mode .caption {
+            color: #bbb;
+        }
+
+        .notification-toggle {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .notification-toggle label {
+            font-size: 1rem;
+            color: #555;
+        }
+
+        .dark-mode .notification-toggle label {
+            color: #bbb;
+        }
+
+        .notification-toggle input {
+            width: 20px;
+            height: 20px;
+        }
+
+        .add-reminder {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .dark-mode .add-reminder {
+            background: rgba(30, 58, 138, 0.5);
+        }
+
+        .add-reminder input {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: box-shadow 0.3s;
+        }
+
+        .add-reminder input[type="text"] {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .add-reminder input[type="date"],
+        .add-reminder input[type="time"] {
+            flex: 1;
+            min-width: 120px;
+        }
+
+        .dark-mode .add-reminder input {
+            background: #1E3A8A;
+            color: #fff;
+        }
+
+        .add-reminder input:focus {
+            box-shadow: 0 0 5px rgba(127, 86, 217, 0.5);
+            outline: none;
+        }
+
+        .dark-mode .add-reminder input:focus {
+            box-shadow: 0 0 5px rgba(59, 130, 246, 0.5);
+        }
+
+        .add-reminder button {
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            background: #7F56D9;
+            color: white;
+            transition: background 0.3s, transform 0.2s;
+        }
+  .add-reminder button:hover {
+            background: #6B46C1;
+            transform: scale(1.05);
+        }
+
+        .reminder-list {
+            margin-bottom: 2rem;
+        }
+
+        .reminder-list h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #7F56D9;
+        }
+
+        .dark-mode .reminder-list h2 {
+            color: #3B82F6;
+        }
+
+        .reminder-list ul {
+            list-style: none;
+        }
+
+        .reminder-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            background: rgba(255, 255, 255, 0.5);
+            border-radius: 10px;
+            transition: transform 0.3s, box-shadow 0.3s;
+            position: relative;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            0% { box-shadow: 0 0 5px rgba(127, 86, 217, 0.3); }
+            100% { box-shadow: 0 0 15px rgba(127, 86, 217, 0.5); }
+        }
+
+        .dark-mode .reminder-list li {
+            background: rgba(30, 58, 138, 0.5);
+            animation: glowDark 2s infinite alternate;
+        }
+
+        @keyframes glowDark {
+            0% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.3); }
+            100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.5); }
+        }
+
+        .reminder-list li:hover {
+            transform: translateY(-3px);
+        }
+
+        .reminder-list li .bell-icon {
+            margin-right: 10px;
+            font-size: 1.2rem;
+            animation: ring 1s infinite;
+        }
+
+        @keyframes ring {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(15deg); }
+            75% { transform: rotate(-15deg); }
+            100% { transform: rotate(0deg); }
+        }
+
+        .reminder-list li span {
+            font-size: 1rem;
+            color: #555;
+            flex: 1;
+        }
+
+        .dark-mode .reminder-list li span {
+            color: #bbb;
+        }
+
+        .reminder-list li button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: background 0.3s, transform 0.2s;
+            margin-left: 5px;
+        }
+
+        .reminder-list li .snooze-btn {
+            background: #FBBF24;
+        }
+
+        .reminder-list li .snooze-btn:hover {
+            background: #DAA520;
+            transform: scale(1.05);
+        }
+
+        .reminder-list li .done-btn {
+            background: #34D399;
+        }
+
+        .reminder-list li .done-btn:hover {
+            background: #2CA87F;
+            transform: scale(1.05);
+        }
+
+        .reminder-history {
+            background: rgba(255, 255, 255, 0.5);
+            padding: 1rem;
+            border-radius: 10px;
+        }
+
+        .dark-mode .reminder-history {
+            background: rgba(30, 58, 138, 0.5);
+        }
+
+        .reminder-history-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .reminder-history h3 {
+            font-size: 1.2rem;
+            color: #7F56D9;
+        }
+
+        .dark-mode .reminder-history h3 {
+            color: #3B82F6;
+        }
+.reminder-history button {
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            background: #F97066;
+            color: white;
+            transition: background 0.3s, transform 0.2s;
+        }
+
+        .reminder-history button:hover {
+            background: #D65A50;
+            transform: scale(1.05);
+        }
+
+        .reminder-history ul {
+            list-style: none;
+        }
+
+        .reminder-history li {
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .dark-mode .reminder-history li {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #bbb;
+        }
+
+        .reminder-history li:last-child {
+            border-bottom: none;
+        }
+
+        footer {
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7));
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            text-align: center;
+            box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .dark-mode footer {
+            background: linear-gradient(90deg, rgba(30, 58, 138, 0.9), rgba(30, 58, 138, 0.7));
+        }
+
+        .quote {
+            font-style: italic;
+            color: #555;
+            margin-bottom: 0.5rem;
+        }
+
+        .dark-mode .quote {
+            color: #bbb;
+        }
+
+        @media (max-width: 768px) {
+            .add-reminder {
+                flex-direction: column;
+            }
+            .add-reminder input,
+            .add-reminder button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo" onclick="window.location.href='index.html'">
+            <img src="Logo.png" alt="MinuteMap Logo">
+            <span>MinuteMap</span>
+        </div>
+        <div class="header-right">
+            <nav>
+                <a href="index.html">Home</a>
+                <a href="index.html#about">About</a>
+            </nav>
+            <span class="theme-toggle" onclick="toggleTheme()">🌙</span>
+        </div>
+    </header>
+    <div class="main-content">
+        <div class="container">
+            <h1>Task Reminders</h1>
+            <p class="caption">Set reminders and never miss a task!</p>
+
+            <div class="notification-toggle">
+                <label for="notifications">Enable Notifications:</label>
+                <input type="checkbox" id="notifications" onchange="toggleNotifications()">
+            </div>
+
+            <div class="add-reminder">
+                <input type="text" id="reminderText" placeholder="Add a new reminder...">
+                <input type="date" id="reminderDate">
+                <input type="time" id="reminderTime">
+                <button onclick="addReminder()">Add Reminder</button>
+            </div>
+
+            <div class="reminder-list">
+                <h2>Upcoming Reminders</h2>
+                <ul id="reminderList">
+                    <!-- Reminders will be populated by JS -->
+                </ul>
+            </div>
+
+            <div class="reminder-history">
+                <div class="reminder-history-header">
+                    <h3>Reminder History</h3>
+                    <button onclick="clearHistory()">Clear History</button>
+                </div>
+                <ul id="reminderHistory">
+                    <!-- History will be populated by JS -->
+                </ul>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <p class="quote">Seize the day, one task at a time.</p>
+        <p>© 2025 MinuteMap. All rights reserved.</p>
+    </footer>
+
+    <script>
+        let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
+        let reminderHistory = JSON.parse(localStorage.getItem('reminderHistory')) || [];
+        let notificationInterval;
+
+        function toggleNotifications() {
+            const checkbox = document.getElementById('notifications');
+            if (checkbox.checked) {
+                if (!("Notification" in window)) {
+                    alert("This browser does not support notifications.");
+                    checkbox.checked = false;
+                    return;
+                }
+                Notification.requestPermission().then(permission => {
+                    if (permission !== "granted") {
+                        alert("Notifications are disabled. Please enable them in your browser settings.");
+                        checkbox.checked = false;
+                    } else {
+                        startNotificationCheck();
+                    }
+                });
+            } else {
+                clearInterval(notificationInterval);
+            }
+        }
+
+        function startNotificationCheck() {
+            notificationInterval = setInterval(() => {
+                const now = new Date();
+                reminders.forEach(reminder => {
+                    const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
+                    if (reminderDateTime <= now && !reminder.notified) {
+                        new Notification("Reminder", {
+                            body: `Time for: ${reminder.text}`,
+                            icon: "Logo.png"
+                        });
+                        reminder.notified = true;
+                        localStorage.setItem('reminders', JSON.stringify(reminders));
+                    }
+                });
+            }, 60000); // Check every minute
+        }
+function addReminder() {
+            const text = document.getElementById('reminderText').value;
+            const date = document.getElementById('reminderDate').value;
+            const time = document.getElementById('reminderTime').value;
+
+            if (!text || !date || !time) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            const reminder = {
+                id: Date.now(),
+                text,
+                date,
+                time,
+                notified: false
+            };
+
+            reminders.push(reminder);
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            renderReminders();
+
+            document.getElementById('reminderText').value = '';
+            document.getElementById('reminderDate').value = '';
+            document.getElementById('reminderTime').value = '';
+        }
+
+        function renderReminders() {
+            const reminderList = document.getElementById('reminderList');
+            reminderList.innerHTML = '';
+            const now = new Date();
+
+            reminders = reminders.filter(reminder => {
+                const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
+                return reminderDateTime > now;
+            });
+
+            reminders.sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+
+            reminders.forEach(reminder => {
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span class="bell-icon">🔔</span>
+                    <span>${reminder.text} (Due: ${reminder.date} ${reminder.time})</span>
+                    <button class="snooze-btn" onclick="snoozeReminder(${reminder.id})">Snooze (10 mins)</button>
+                    <button class="done-btn" onclick="markAsDone(${reminder.id})">Mark as Done</button>
+                `;
+                reminderList.appendChild(li);
+            });
+
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            renderHistory();
+        }
+
+        function snoozeReminder(id) {
+            const reminder = reminders.find(r => r.id === id);
+            if (!reminder) return;
+
+            const dueDateTime = new Date(`${reminder.date}T${reminder.time}`);
+            dueDateTime.setMinutes(dueDateTime.getMinutes() + 10);
+            reminder.date = dueDateTime.toISOString().split('T')[0];
+            reminder.time = dueDateTime.toTimeString().split(' ')[0].slice(0, 5);
+            reminder.notified = false;
+
+            reminderHistory.push({
+                task: reminder.text,
+                action: `Snoozed to ${reminder.date} ${reminder.time}`,
+                timestamp: new Date().toLocaleString()
+            });
+
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            localStorage.setItem('reminderHistory', JSON.stringify(reminderHistory));
+            renderReminders();
+        }
+
+        function markAsDone(id) {
+            const reminder = reminders.find(r => r.id === id);
+            if (!reminder) return;
+
+            reminderHistory.push({
+                task: reminder.text,
+                action: `Marked as Done`,
+                timestamp: new Date().toLocaleString()
+            });
+
+            reminders = reminders.filter(r => r.id !== id);
+
+            localStorage.setItem('reminders', JSON.stringify(reminders));
+            localStorage.setItem('reminderHistory', JSON.stringify(reminderHistory));
+            renderReminders();
+        }
+
+        function clearHistory() {
+            reminderHistory = [];
+            localStorage.setItem('reminderHistory', JSON.stringify(reminderHistory));
+            renderHistory();
+        }
+
+        function renderHistory() {
+            const historyList = document.getElementById('reminderHistory');
+            historyList.innerHTML = '';
+            reminderHistory.forEach(entry => {
+                const li = document.createElement('li');
+                li.textContent = `${entry.task}: ${entry.action} at ${entry.timestamp}`;
+                historyList.appendChild(li);
+            });
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const toggle = document.querySelector('.theme-toggle');
+            toggle.textContent = document.body.classList.contains('dark-mode') ? '☀️' : '🌙';
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        if (localStorage.getItem('theme') === 'dark') {
+            document.body.classList.add('dark-mode');
+            document.querySelector('.theme-toggle').textContent = '☀️';
+        }
+
+        document.getElementById('notifications').checked = Notification.permission === "granted";
+        renderReminders();
+        if (Notification.permission === "granted") {
+            startNotificationCheck();
+        }
+    </script>
+</body>
+</html>
